@@ -5,22 +5,26 @@
 #Class: cs4103-sp20
 #LogonID: cs410361
 
-clock: main.o
-	gcc -g main.o -o clock
+disk: main.o
+	gcc -g main.o -o disk
 
 main.o: main.c
 	gcc -c main.c
 
-full:
+fcfs:
 	make
-	./clock 20 pageref.txt 1 10 20
+	./disk 53 200 FCFS requests.txt
 
-small:
+sstf:
 	make
-	./clock 20 pageref-small.txt 1 10 20
+	./disk 53 200 SSTF requests.txt
+
+scan:
+	make
+	./disk 53 200 SCAN requests.txt
 
 clean: 
-	rm *.o clock
+	rm *.o disk
 
 submit:
 	make clean
