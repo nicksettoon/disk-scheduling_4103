@@ -1,5 +1,5 @@
 #Name: Nicklaus Settoon
-#Project: PA-2 (Page Replacement Algorithm)
+#Project: PA-3 (Disk Scheduling Algorithm)
 #File: makefile
 #Instructor: Feng Chen
 #Class: cs4103-sp20

@@ -1,10 +1,15 @@
 # 4103_CLOCK-page-replacement
-Nicklaus Wayne Settoon 894473560 nsetto3@lsu.edu
+#Name: Nicklaus Settoon
+#Project: PA-3 (Disk Scheduling Algorithm)
+#File: README.md
+#Instructor: Feng Chen
+#Class: cs4103-sp20
+#LogonID: cs410361
 
 This is a program which simulates a clock page replacement algorithm on a machine with parametered conditions.
 
 COMPILATION:
-simply run $ make
+$ make
 
 RUN:
 $ ./clock avail_page_frames page_references.txt page_access_time page_swapin_time page_swapout_time
