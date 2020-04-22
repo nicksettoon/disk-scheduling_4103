@@ -16,6 +16,7 @@ $ make fcfs
 $ make sstf
 $ make scan
 
+disk CURRENT_HEAD_POS MAX_LOGICAL_BLKS_ON_DISK SCHED_ALGO REQUESTS_FILE.txt
 $ ./disk 53 200 FCFS requests.txt
 
 OUTPUT:
