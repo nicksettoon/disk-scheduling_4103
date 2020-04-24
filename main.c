@@ -12,8 +12,8 @@ LogonID: cs410361
 #include <ctype.h>
 #include <time.h>
 
-enum SchedMode {FCFS = 0, SSTF, SCAN};
-typedef enum SchedMode mode;
+// enum SchedMode {FCFS = 0, SSTF, SCAN};
+// typedef enum SchedMode mode;
 
 struct outputBlock{
     int reqtotal;
@@ -34,9 +34,8 @@ int getBlocks(int _currentpos, int _requests[], output* _results)
     float transtime = 0.031;
     float acctime;
 
-
     for(int req = 0; req < _results->reqtotal; req++){
-        printf("\nRequest %d: get block %s\n", (req + 1), _requests[req]); //print the line
+        printf("\n%d: get block %d\n", (req + 1), _requests[req]); 
         //required output
         printf("target head pos: %d\n", _requests[req]);
         printf("current head pos: %d\n", _currentpos);
@@ -66,8 +65,46 @@ int getBlocks(int _currentpos, int _requests[], output* _results)
 
         _currentpos = _requests[req]; //update current position
     }
-
     return 0;
+}
+
+void scheduleSSTF(int _currentpos, int _requests[], int _reqcount)
+{//reorders the array of integers in Shortest-Seek-Time-First order.
+    int requests[_reqcount];
+    int disttonextblock;
+    int mindist;
+    int minblkindex;
+
+    for(int i = 0; i < _reqcount; i++)
+    {
+        mindist = __INT32_MAX__;//reset mindist
+        for(int j = 0; j < _reqcount; j++)
+        {//for each req, comapre to currentpos to find min dist block
+            disttonextblock = abs(_requests[j] - _currentpos);
+            if (disttonextblock < mindist)
+            {//if new block's distance is less than current min
+                mindist = disttonextblock; //move
+                minblkindex = j;
+            }
+        }
+        //set next block to min dist blk found
+        requests[i] = _requests[minblkindex];
+        //move current position to that block
+        _currentpos = requests[i];
+        //set element in old _requests array to INT_MAX so disttonextblock is maximal for that element, essentially skipping that request in the for loop
+        _requests[minblkindex] = __INT32_MAX__;
+    }
+
+    for(int i = 0; i < _reqcount; i++){
+        _requests[i] = requests[i];
+    }
+}
+
+void printRequests(int _requests[], int _count){
+    printf("\nPrinting Requests:\n");
+    for(int i = 0; i < _count; i++){
+        printf("%d: %d\n", i, _requests[i]);
+    }
 }
 
 int main(int argcount, char* argv[])
@@ -105,9 +142,24 @@ int main(int argcount, char* argv[])
         index++;
     }
 
-    getBlocks(__startheadpos, requests, &__results); //do calculations on request string
+    printRequests(requests, __results.reqtotal);
+    // reschedule requests into SSTF order
+    scheduleSSTF(__startheadpos, requests, __results.reqtotal);
+    printRequests(requests, __results.reqtotal);
+
+    // do calculations on request string
+    // getBlocks(__startheadpos, requests, &__results); 
 
     fclose(reqfile);
+
+    // printf("",__results.);
+    // printf("\nFINAL RESULTS\n");
+    // printf("Total disk requests: %d\n",__results.reqtotal);
+    // printf("Total disk head movement: %d\n",__results.disttotal);
+    // printf("Total seek time: %d\n",__results.seektotal);
+    // printf("Total rotation latency time: %d\n",__results.rotlattotal);
+    // printf("Total transfer time: %d\n",__results.transtimetotal);
+    // printf("Total access time: %d\n",__results.acctimetotal);
     return 0;
 }
 

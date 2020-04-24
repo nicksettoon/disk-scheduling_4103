@@ -10,11 +10,10 @@
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
             "args": [
-                "20",
-                "pageref.txt",
-                "1",
-                "10",
-                "20"
+                "53",
+                "200",
+                "FCFS",
+                "requests.txt"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
