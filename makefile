@@ -5,26 +5,26 @@
 #Class: cs4103-sp20
 #LogonID: cs410361
 
-disk: main.o
-	gcc -g main.o -o disk
+main: main.o
+	gcc -g main.o -o main
 
 main.o: main.c
 	gcc -c main.c
 
 fcfs:
 	make
-	./disk 53 200 FCFS requests.txt
+	./main 53 200 FCFS requests.txt
 
 sstf:
 	make
-	./disk 53 200 SSTF requests.txt
+	./main 53 200 SSTF requests.txt
 
 scan:
 	make
-	./disk 53 200 SCAN requests.txt
+	./main 53 200 SCAN requests.txt
 
 clean: 
-	rm *.o disk
+	rm *.o main
 
 submit:
 	make clean
