@@ -12,8 +12,8 @@
             "args": [
                 "53",
                 "200",
-                "FCFS",
-                "scan-right.txt"
+                "SCAN",
+                "scan-ahead.txt"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

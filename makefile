@@ -40,16 +40,11 @@ oob:
 clean: 
 	rm *.o disk
 
-finalsubmission:
-	make clean
-	rm .*
-	rm *.pdf
-	rm *.code-workspace
-	rm .gitignore
-	rm -rf .vscode
-	rm -rf .git
+finalsubmit:
+	~cs4103_chf/bin/p_copy 3
 
-
+verify:
+	~cs4103_chf/bin/verify 3
 git:
 	make clean
 	git add -A

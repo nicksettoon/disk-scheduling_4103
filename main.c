@@ -40,9 +40,15 @@ struct reqArray{
 typedef struct reqArray requests;
 void reqPrt(requests* _requests)
 {//prints a reqArry struct
+    int blk;
     // printf("\nPrinting Requests:\n");
     for(int i = 0; i < _requests->size; i++){
-        printf("%d: %d\n", i, _requests->reqs[i]);
+        if(_requests->reqs[i] == -1)
+            blk = 0;
+        else
+            blk = _requests->reqs[i];
+
+        printf("%d: %d\n", i, blk);
     }
 }
 
@@ -274,8 +280,6 @@ void scheduleSSTF(requests* _requests)
     {//copy outputreqests into _requests to pass it back to main
         _requests->reqs[i] = requests_.reqs[i];
     }
-    //clean up
-    free(requests_.reqs);
 }
 
 void scheduleSCAN(requests* _requests)
@@ -338,8 +342,6 @@ void scheduleSCAN(requests* _requests)
     for(i = 0; i < _requests->size + 1; i++){
         _requests->reqs[i] = requests_.reqs[i];
     }
-    //clean up
-    free(requests_.reqs);
 }
 
 
