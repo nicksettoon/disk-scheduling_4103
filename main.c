@@ -156,14 +156,14 @@ int main(int argcount, char* argv[])
     }
 
     if(oob)
-    {
         printf("\nReached out of bounds block %d.\n", __requests.reqs[oob-1]);
-    }
+    else
+        oob = __requests.size;
+
     printf("\nORDER OF SORTED REQUESTS:\n");
     reqPrt(&__requests);
 
-    printf("\nFINAL RESULTS:\n");
-    printf("Results valid up to block %d\n",__requests.reqs[oob-1]);
+    printf("\nFINAL RESULTS: (valid up to and including block %d)\n",__requests.reqs[oob-1]);
     resPrt(&__results);
 
     //cleanup

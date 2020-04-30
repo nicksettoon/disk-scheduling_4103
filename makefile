@@ -33,7 +33,7 @@ behind:
 	./disk 53 200 SCAN scan-behind.txt
 
 #OUT OF BOUNDS
-outofbounds:
+oob:
 	make
 	./disk 53 200 FCFS error.txt
 
