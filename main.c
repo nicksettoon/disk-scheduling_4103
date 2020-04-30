@@ -35,6 +35,7 @@ struct reqArray{
     int* reqs;
     int size;
     int currblk;
+    int maxblk;
 };
 typedef struct reqArray requests;
 void reqPrt(requests* _requests)
@@ -119,6 +120,7 @@ int main(int argcount, char* argv[])
     __requests.currblk = __startheadpos;
     int* tempreqs = realloc(__requests.reqs, (__requests.size) * sizeof(int));
     __requests.reqs = tempreqs;
+    __requests.maxblk = MAX_BLOCK_ADDR;
 
     int index = 0;
     while (fgets(currentrequest, 10, reqfile) != NULL)
@@ -128,33 +130,40 @@ int main(int argcount, char* argv[])
         index++;
     }
 
+    int oob;
     printf("\nREQUESTS BEFORE RE-ORDER:\n");
     switch (modeset)
     {
     case 0://FCFS is just FIFO queue, so no req array manipulation
         printf("Using FCFS algo.\n");
         reqPrt(&__requests);
-        getBlocks(&__requests, &__results); 
+        oob = getBlocks(&__requests, &__results); 
         break;
 
     case 1://reschedule requests into SSTF order then calc
         printf("Using SSTF algo.\n");
         reqPrt(&__requests);
         scheduleSSTF(&__requests);
-        getBlocks(&__requests, &__results); 
+        oob = getBlocks(&__requests, &__results); 
         break;
 
     case 2://reschedule requests into SCAN order then calc
         printf("Using SCAN algo.\n");
         reqPrt(&__requests);
         scheduleSCAN(&__requests);
-        getBlocks(&__requests, &__results); 
+        oob = getBlocks(&__requests, &__results); 
         break;
     }
-    printf("\nORDER OF FULFILLED REQUESTS:\n");
+
+    if(oob)
+    {
+        printf("\nReached out of bounds block %d.\n", __requests.reqs[oob-1]);
+    }
+    printf("\nORDER OF SORTED REQUESTS:\n");
     reqPrt(&__requests);
 
     printf("\nFINAL RESULTS:\n");
+    printf("Results valid up to block %d\n",__requests.reqs[oob-1]);
     resPrt(&__results);
 
     //cleanup
@@ -176,15 +185,19 @@ int getBlocks(requests* _requests, output* _results)
 
     for(int req = 0; req < _requests->size; req++){
         printf("\n%d: GET BLOCK(%d)\n", (req + 1), _requests->reqs[req]); 
-        printf("current head pos: %d\n", _requests->currblk);
-
         if(_requests->reqs[req] == -1)
         {//this is a signal from SCAN algo to visit block 0, but not to read it
             visitzero = 1;
             target = 0;
         }
+        else if(_requests->reqs[req] > _requests->maxblk)
+        {
+            printf("Target block is greater than max disk blocks.");
+            return req;
+        }
         else
             target = _requests->reqs[req];
+        printf("current head pos: %d\n", _requests->currblk);
         printf("target head pos: %d\n", target);
 
         //calc head travel distance

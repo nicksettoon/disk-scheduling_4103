@@ -5,41 +5,49 @@
 #Class: cs4103-sp20
 #LogonID: cs410361
 
-main: main.o
-	gcc -g main.o -o main
+disk: main.o
+	gcc -g main.o -o disk
 
 main.o: main.c
 	gcc -c main.c
 
 fcfs:
 	make
-	./main 53 200 FCFS requests.txt
+	./disk 53 200 FCFS requests.txt
 
 sstf:
 	make
-	./main 53 200 SSTF requests.txt
+	./disk 53 200 SSTF requests.txt
 
 #SCAN VARIATIONS
 scan:
 	make
-	./main 53 200 SCAN requests.txt
-# r:
-# 	make
-# 	./main 53 200 SCAN scan-right.txt
+	./disk 53 200 SCAN requests.txt
 
-# l:
-# 	make
-# 	./main 53 200 SCAN scan-left.txt
+ahead:
+	make
+	./disk 53 200 SCAN scan-ahead.txt
 
+behind:
+	make
+	./disk 53 200 SCAN scan-behind.txt
+
+#OUT OF BOUNDS
+outofbounds:
+	make
+	./disk 53 200 FCFS error.txt
 
 clean: 
-	rm *.o main
+	rm *.o disk
 
-submit:
+finalsubmission:
 	make clean
 	rm .*
 	rm *.pdf
 	rm *.code-workspace
+	rm .gitignore
+	rm -rf .vscode
+	rm -rf .git
 
 git:
 	make clean

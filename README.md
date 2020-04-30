@@ -11,12 +11,26 @@ This is a program which simulates a clock page replacement algorithm on a machin
 COMPILATION:
 $ make
 
-RUN:
+RUN COMMANDS:
+format: disk CURRENT_HEAD_POS MAX_LOGICAL_BLKS SCHED_ALGO REQUESTS_FILE.txt
+example: $ ./disk 53 200 FCFS requests.txt
+
+run example with fcfs algo
 $ make fcfs
+
+run example with sstf algo
 $ make sstf
+
+run example with scan algo
 $ make scan
 
-disk CURRENT_HEAD_POS MAX_LOGICAL_BLKS_ON_DISK SCHED_ALGO REQUESTS_FILE.txt
-$ ./disk 53 200 FCFS requests.txt
+run scan algo, but requests are all in front of CURRENT_HEAD_POS
+$ make ahead
+
+run scan algo, but requests are all behind CURRENT_HEAD_POS
+$ make behind
+
+run fcfs with requests outside of the MAX_LOGICAL_BLKS
+$ make outofbounds
 
 OUTPUT:
