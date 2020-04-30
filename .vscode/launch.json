@@ -13,7 +13,7 @@
                 "53",
                 "200",
                 "FCFS",
-                "requests.txt"
+                "scan-right.txt"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

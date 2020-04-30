@@ -12,8 +12,15 @@ LogonID: cs410361
 #include <ctype.h>
 #include <time.h>
 
-// enum SchedMode {FCFS = 0, SSTF, SCAN};
-// typedef enum SchedMode mode;
+enum SchedMode {FCFS = 0, SSTF, SCAN};
+typedef enum SchedMode mode;
+
+struct reqArray{
+    int* reqs;
+    int size;
+    int currblk;
+};
+typedef struct reqArray requests;
 
 struct outputBlock{
     int reqtotal;
@@ -25,10 +32,10 @@ struct outputBlock{
 };
 typedef struct outputBlock output;
 
-void printRequests(int _requests[], int _count){
+void printRequests(requests* _requests){
     printf("\nPrinting Requests:\n");
-    for(int i = 0; i < _count; i++){
-        printf("%d: %d\n", i, _requests[i]);
+    for(int i = 0; i < _requests->size; i++){
+        printf("%d: %d\n", i, _requests->reqs[i]);
     }
 }
 
@@ -101,7 +108,7 @@ void mergeSort(int arr[], int _left, int _right)
     } 
 } 
 
-int getBlocks(int _currentpos, int _requests[], output* _results)
+int getBlocks(requests* _requests, output* _results)
 {//calculates seek time, rotational latency, and transfer time of each block request according to the FCFS scheduling algorithm.
     srand(time(NULL));
     int dist;
@@ -110,13 +117,20 @@ int getBlocks(int _currentpos, int _requests[], output* _results)
     float transtime = 0.031;
     float acctime;
 
-    for(int req = 0; req < _results->reqtotal; req++){
-        printf("\n%d: get block %d\n", (req + 1), _requests[req]); 
+    for(int req = 0; req < _requests->size; req++){
+        printf("\n%d: get block %d\n", (req + 1), _requests->reqs[req]); 
         //required output
         printf("target head pos: %d\n", _requests[req]);
-        printf("current head pos: %d\n", _currentpos);
+        printf("current head pos: %d\n", _requests->currblk);
         //calc head travel distance
-        dist = abs(_requests[req] - _currentpos);
+        if(_requests->reqs[req] == -1)
+        {//this is a signal to visit block 0, but not to read it
+            //skip rotlat, transtime
+            //add seek time
+            //add acctime
+        }
+        else
+            dist = abs(_requests->reqs[req] - _requests->currblk);
         _results->disttotal += dist;
         printf("distance to target: %d\n", dist);
 
@@ -139,68 +153,89 @@ int getBlocks(int _currentpos, int _requests[], output* _results)
         _results->acctimetotal += acctime;
         printf("access time: %f\n", acctime);
 
-        _currentpos = _requests[req]; //update current position
+        _requests->currblk = _requests->reqs[req]; //update current position
     }
     return 0;
 }
 
-void scheduleSCAN(int _currentpos, int _requests[], int _reqcount)
+void scheduleSCAN(requests* _requests)
 {//reorders the array of blocks into SCAN order.
-    int i = 0; //general index for _requests array
+    int i = 0; //general index for _requests->reqs array
 
     //sort given array least to greatest
-    mergeSort(_requests, 0, (_reqcount - 1));
+    mergeSort(_requests->reqs, 0, (_requests->size - 1)); 
+    // printRequests(_requests);
 
-    //add one element to array to signal getBlocks to visit beginning of disk, but not read.
-    int* tempreq = realloc(_requests, (_reqcount+1) * sizeof(int));
-    _requests = tempreq;
-    int outputrequests[_reqcount+1];//output array must be same size
+    //array for holding transformed requests list
+    requests requests_;
+    requests_.size = _requests->size;
+    requests_.reqs = malloc(requests_.size);
 
+    int rightblkindex;//save index of larger block # later
     //search sorted array for first block larger than _currentpos
-    for(i; i < _reqcount; i++){
-        if(_requests[i] > _currentpos)
-            break;
-    }
-    int rightblkindex = i;//save index of larger block #
+    for(i; i < _requests->size; i++){
+        if(_requests->reqs[i] > _requests->currblk)
+        {//if any reqblk is greater than the currblk we have to visit zero block
+            rightblkindex = i;//save index of larger block #
+            i--;//move i back to smaller block #
 
-    //count backwards through _requests, adding elements to outputrequest
-    i--;//move i back to lower block
-    int j = 0; //new index for outputrequests
+            //resize reqs to fit order to visit zero block
+            _requests->size += 1;
+            int* inptresize = realloc(_requests->reqs, (_requests->size) * sizeof(int));
+            _requests->reqs = inptresize;
+
+            //resize outputreqs to fit _requests->reqs
+            requests_.size += 1;
+            int* otptresize = realloc(requests_.reqs, (requests_.size) * sizeof(int));
+            requests_.reqs = otptresize;
+            break;
+        }
+    }
+    if (i >= _requests->size)
+        i--;
+    // printRequests(_requests);
+    //count backwards through _requests, adding elements to requests_
+    int j = 0; //new index for requests_
     while(i >= 0){
-        outputrequests[j] = _requests[i];
+        requests_.reqs[j] = _requests->reqs[i];
         i--;
         j++;
     }
 
-    //i will be -1 here and inserting it signals getBlocks to visit, but skip reading block 0.
-    outputrequests[j] = i;
-    
-    //start pulling blocks from _requests again, starting from rightblockindex onward
-    i = rightblkindex; //reset i to larger block #
-    for(i; i < _reqcount; i++){
-        j++;
-        outputrequests[j] = _requests[i];
+    if(j < requests_.size)
+    {
+        //i will be -1 here and inserting it signals getBlocks to visit, but skip reading block 0.
+        requests_.reqs[j] = i;
+        
+        //start pulling blocks from _requests again, starting from rightblockindex onward
+        i = rightblkindex; //reset i to larger block #
+        for(i; i < _requests->size; i++){
+            j++;
+            requests_.reqs[j] = _requests->reqs[i];
+        }
     }
-
-    //copy outputreqests into _requests to pass it back to main
-    for(i = 0; i < _reqcount+1; i++){
-        _requests[i] = outputrequests[i];
+    //copy outputreqests into _requests-> before returning to main
+    for(i = 0; i < _requests->size + 1; i++){
+        _requests->reqs[i] = requests_.reqs[i];
     }
 }
 
-void scheduleSSTF(int _currentpos, int _requests[], int _reqcount)
+void scheduleSSTF(requests* _requests)
 {//reorders the array of blocks into Shortest-Seek-Time-First order.
-    int outputrequests[_reqcount];
+    //array for holding transformed requests list
+    requests requests_;
+    requests_.size = _requests->size;
+    requests_.reqs = malloc(requests_.size);
     int disttonextblock;
     int mindist;
     int minblkindex;
 
-    for(int i = 0; i < _reqcount; i++)
+    for(int i = 0; i < requests_.size; i++)
     {
         mindist = __INT32_MAX__;//reset mindist
-        for(int j = 0; j < _reqcount; j++)
+        for(int j = 0; j < requests_.size; j++)
         {//for each req, comapre to currentpos to find min dist block
-            disttonextblock = abs(_requests[j] - _currentpos);
+            disttonextblock = abs(_requests->reqs[j] - _requests->currblk);
             if (disttonextblock < mindist)
             {//if new block's distance is less than current min
                 mindist = disttonextblock; //move
@@ -208,16 +243,16 @@ void scheduleSSTF(int _currentpos, int _requests[], int _reqcount)
             }
         }
         //set next block to min dist blk found
-        outputrequests[i] = _requests[minblkindex];
+        requests_.reqs[i] = _requests->reqs[minblkindex];
         //move current position to that block
-        _currentpos = outputrequests[i];
+        _requests->currblk = requests_.reqs[i];
         //set element in old _requests array to INT_MAX so disttonextblock is maximal for that element, essentially skipping that request in the for loop
-        _requests[minblkindex] = __INT32_MAX__;
+        _requests->reqs[minblkindex] = __INT32_MAX__;
     }
 
-    for(int i = 0; i < _reqcount; i++)
+    for(int i = 0; i < requests_.size; i++)
     {//copy outputreqests into _requests to pass it back to main
-        _requests[i] = outputrequests[i];
+        _requests->reqs[i] = requests_.reqs[i];
     }
 }
 
@@ -232,58 +267,66 @@ int main(int argcount, char* argv[])
     int blocknum; //int holder for currentrequest's block #
     // printf("%s\n", argv[3]);
 
-    FILE* reqfile = fopen(argv[4],"r"); //open file
-    if (reqfile == NULL){//file isn't open
-            printf("\nCouldn't open page references file.\n");
-            return 0;
-        }
-        else//file is open
-            printf("\nPage references file opened.\n");
+    mode SCHED_ALGO = (mode)SchedMode.Parse(typeof(mode), argv[3]);
 
-    //grab each line from the text file
-    while (fgets(currentrequest, 10, reqfile) != NULL)
-        __results.reqtotal++;//count # of requests
+    // // printf("%d\n", SCHED_ALGO);
+    // FILE* reqfile = fopen(argv[4],"r"); //open file
+    // if (reqfile == NULL){//file isn't open
+    //         printf("\nCouldn't open page references file.\n");
+    //         return 0;
+    //     }
+    //     else//file is open
+    //         printf("\nPage references file opened.\n");
 
-    rewind(reqfile);//start over from beginning of file
-    int* requests = malloc(__results.reqtotal * sizeof(int)); //create array for requests
+    // //grab each line from the text file
+    // while (fgets(currentrequest, 10, reqfile) != NULL)
+    //     __results.reqtotal++;//count # of requests
 
-    int index = 0;
-    while (fgets(currentrequest, 10, reqfile) != NULL)
-    {//grab each line from the text file
-        sscanf(currentrequest,"%d", &blocknum); //parse line
-        requests[index] = blocknum; //store in array
-        index++;
-    }
+    // rewind(reqfile);//start over from beginning of file
 
-    // printRequests(requests, __results.reqtotal);
-    // reschedule requests into SSTF order
-    // scheduleSSTF(__startheadpos, requests, __results.reqtotal);
-    // printRequests(requests, __results.reqtotal);
+    // //create reqArray
+    // requests __requests;
+    // __requests.reqs = malloc(0);
+    // __requests.size = __results.reqtotal;
+    // __requests.currblk = __startheadpos;
+    // int* tempreqs = realloc(__requests.reqs, (__requests.size) * sizeof(int));
+    // __requests.reqs = tempreqs;
 
-    printRequests(requests, __results.reqtotal);
-    // reschedule requests into SCAN order
-    scheduleSCAN(__startheadpos, requests, __results.reqtotal);
-    printRequests(requests, __results.reqtotal+1);
+    // int index = 0;
+    // while (fgets(currentrequest, 10, reqfile) != NULL)
+    // {//grab each line from the text file
+    //     sscanf(currentrequest,"%d", &blocknum); //parse line
+    //     __requests.reqs[index] = blocknum; //store in array
+    //     index++;
+    // }
 
-    // do calculations on request string
-    // getBlocks(__startheadpos, requests, &__results); 
+    // // printRequests(requests, __results.reqtotal);
+    // // reschedule requests into SSTF order
+    // // scheduleSSTF(__startheadpos, requests, __results.reqtotal);
+    // // printRequests(requests, __results.reqtotal);
 
-    fclose(reqfile);
+    // printRequests(&__requests);
+    // // reschedule requests into SCAN order
+    // scheduleSCAN(&__requests);
+    // printRequests(&__requests);
 
-    // printf("",__results.);
-    // printf("\nFINAL RESULTS\n");
-    // printf("Total disk requests: %d\n",__results.reqtotal);
-    // printf("Total disk head movement: %d\n",__results.disttotal);
-    // printf("Total seek time: %d\n",__results.seektotal);
-    // printf("Total rotation latency time: %d\n",__results.rotlattotal);
-    // printf("Total transfer time: %d\n",__results.transtimetotal);
-    // printf("Total access time: %d\n",__results.acctimetotal);
+    // // do calculations on request string
+    // // getBlocks(__startheadpos, requests, &__results); 
+
+    // fclose(reqfile);
+
+    // // printf("",__results.);
+    // // printf("\nFINAL RESULTS\n");
+    // // printf("Total disk requests: %d\n",__results.reqtotal);
+    // // printf("Total disk head movement: %d\n",__results.disttotal);
+    // // printf("Total seek time: %d\n",__results.seektotal);
+    // // printf("Total rotation latency time: %d\n",__results.rotlattotal);
+    // // printf("Total transfer time: %d\n",__results.transtimetotal);
+    // // printf("Total access time: %d\n",__results.acctimetotal);
+    // free(__requests.reqs);
     return 0;
 }
 
-    // mode SCHED_ALGO = (mode)enum.Parse(typeof(mode), argv[3]);
-
-    // printf("%d\n", SCHED_ALGO);
 
     // switch (SCHED_ALGO)
     // {

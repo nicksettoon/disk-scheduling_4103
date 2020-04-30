@@ -11,17 +11,26 @@ main: main.o
 main.o: main.c
 	gcc -c main.c
 
-fcfs:
+FCFS:
 	make
 	./main 53 200 FCFS requests.txt
 
-sstf:
+SSTF:
 	make
 	./main 53 200 SSTF requests.txt
 
-scan:
+#SCAN VARIATIONS
+m:
 	make
 	./main 53 200 SCAN requests.txt
+r:
+	make
+	./main 53 200 SCAN scan-right.txt
+
+l:
+	make
+	./main 53 200 SCAN scan-left.txt
+
 
 clean: 
 	rm *.o main
